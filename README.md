@@ -1,6 +1,6 @@
-# Hearth: thermostat control for your phone
+# Homebase: home control for your phone
 
-A phone web app (PWA) for the Honeywell T6 Pro Z-Wave thermostat. You can add it to the Android home screen and it opens full screen like a normal app. Built 2026-11-08.
+A phone web app (PWA) for controlling Z-Wave devices at home. The first device it supports is the Honeywell T6 Pro Z-Wave thermostat; more device types can be added later. You can add it to the Android home screen and it opens full screen like a normal app. Built 2026-11-08.
 
 ## What it does
 
@@ -17,7 +17,7 @@ A phone web app (PWA) for the Honeywell T6 Pro Z-Wave thermostat. You can add it
 
 ADT doesn't provide a public or local API that outside apps can use to control Z-Wave devices. The only ADT control path is ADT's own app and cloud.
 
-So Hearth is built on the **SmartThings API**, which is the platform the **Aeotec Smart Home Hub** uses. Once the thermostat is moved to that hub, the app works with it.
+So Homebase is built on the **SmartThings API**, which is the platform the **Aeotec Smart Home Hub** uses. Once the thermostat is moved to that hub, the app works with it.
 
 ### Moving the thermostat to the Aeotec hub (once you have it)
 1. Set up the Aeotec hub in the SmartThings app.
@@ -25,9 +25,9 @@ So Hearth is built on the **SmartThings API**, which is the platform the **Aeote
 3. In the SmartThings app: Add device → Honeywell/Resideo T6 Pro Z-Wave, then put the thermostat into pairing mode. The installer menu on the thermostat has a Z-Wave option; check the T6 Pro manual for the exact steps.
 4. Confirm you can change the temperature from the SmartThings app first.
 
-## Connecting Hearth
+## Connecting Homebase
 1. Go to https://account.smartthings.com/tokens and create a token with **Devices: List, See, Control** turned on.
-2. In Hearth, tap the gear → paste the token → **Find thermostats** → choose it → **Save and connect**.
+2. In Homebase, tap the gear → paste the token → **Find thermostats** → choose it → **Save and connect**.
 
 **Important limit:** new SmartThings personal tokens **expire after 24 hours**. That's fine for testing, but for daily use the app needs SmartThings OAuth, which renews itself automatically. That's the planned next step once the hub is set up. Until then, an expired token shows "Token rejected" and you'd paste in a new one.
 
@@ -46,10 +46,5 @@ To use it on your phone, the app needs to be hosted on HTTPS so Android can inst
 - `app/manifest.json`, `app/sw.js`, `app/icon*`: home-screen install support
 - `serve.js`: small local test server
 
-## Name options
-Currently called **Hearth**. To rename it, change `APP_NAME` in `app/index.html` and `name`/`short_name` in `app/manifest.json`.
-- **Hearth**: warm, home-centered
-- **Allette Home**: the family name on it
-- **Steady**: about keeping the house comfortable
-- **Haven**: the house as a place of rest
-- **Comfort Keeper**: plain and descriptive
+## Name
+The app is called **Homebase** (renamed from Hearth on 2026-11-08), so it can grow beyond the thermostat to other Z-Wave devices. The name is set in `APP_NAME` in `app/index.html` and in `name`/`short_name` in `app/manifest.json`.

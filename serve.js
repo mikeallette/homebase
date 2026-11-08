@@ -1,4 +1,4 @@
-// Minimal static server for testing Hearth on this PC or a phone on the same Wi-Fi.
+// Minimal static server for testing Homebase on this PC or a phone on the same Wi-Fi.
 // Run: node serve.js   then open http://<this-pc-ip>:5173
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "app"), port = process.env.PORT || 5173;
@@ -13,4 +13,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": types[path.extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
     res.end(data);
   });
-}).listen(port, "0.0.0.0", () => console.log(`Hearth running at http://localhost:${port}`));
+}).listen(port, "0.0.0.0", () => console.log(`Homebase running at http://localhost:${port}`));

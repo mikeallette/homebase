@@ -1,4 +1,4 @@
-name: Deploy Hearth to GitHub Pages
+name: Deploy Homebase to GitHub Pages
 
 on:
   push:

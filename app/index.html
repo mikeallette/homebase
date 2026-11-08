@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hearth</title>
+<title>Homebase</title>
 <meta name="theme-color" content="#14181f">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -73,7 +73,7 @@ dialog::backdrop{background:#0008}
 <body>
 <header>
   <div>
-    <h1 id="appName">Hearth</h1>
+    <h1 id="appName">Homebase</h1>
     <div class="status"><span class="dot" id="dot"></span><span id="statusText">Starting…</span></div>
   </div>
   <div style="display:flex;gap:8px">
@@ -157,7 +157,7 @@ dialog::backdrop{background:#0008}
 <script>
 "use strict";
 // ---------- Config ----------
-const APP_NAME = "Hearth";            // change here (and in manifest.json) to rename the app
+const APP_NAME = "Homebase";            // change here (and in manifest.json) to rename the app
 const API = "https://api.smartthings.com/v1";
 const POLL_MS = 30000;                // refresh from the hub every 30 s
 const SEND_DELAY_MS = 900;            // wait for button taps to settle before sending
@@ -168,8 +168,8 @@ const FAN_LABEL = { auto:"Auto", on:"On", circulate:"Circulate", followschedule:
 
 // ---------- Storage (wrapped: private windows can block it) ----------
 const store = {
-  get(k){ try { return localStorage.getItem("hearth."+k); } catch { return null; } },
-  set(k,v){ try { v==null ? localStorage.removeItem("hearth."+k) : localStorage.setItem("hearth."+k,v); } catch {} }
+  get(k){ try { return localStorage.getItem("homebase."+k); } catch { return null; } },
+  set(k,v){ try { v==null ? localStorage.removeItem("homebase."+k) : localStorage.setItem("homebase."+k,v); } catch {} }
 };
 
 // ---------- State ----------

@@ -1,7 +1,7 @@
 {
-  "name": "Hearth",
-  "short_name": "Hearth",
-  "description": "Control the home thermostat from your phone.",
+  "name": "Homebase",
+  "short_name": "Homebase",
+  "description": "Control your Z-Wave home devices from your phone.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
