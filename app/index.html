@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hearth</title>
+<meta name="theme-color" content="#14181f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f4f1ec; --card:#ffffff; --ink:#1d2228; --muted:#6b7380; --line:#e3ded6;
+  --heat:#e2622b; --cool:#2b7de2; --auto:#7a5bd6; --off:#8a919b; --ok:#2f9e5b; --err:#c8372d;
+  --accent:var(--off);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14181f; --card:#1d232c; --ink:#eef1f5; --muted:#9aa3ae; --line:#2b333e; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 6px}
+h1{font-size:22px;margin:0;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:13px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.iconbtn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px}
+.status{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--off)}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--err)} .dot.busy{background:var(--auto);animation:p 1s infinite}
+@keyframes p{50%{opacity:.3}}
+.dial{position:relative;width:min(78vw,300px);aspect-ratio:1;margin:8px auto 0}
+.dial svg{width:100%;height:100%;transform:rotate(135deg)}
+.dial .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.state{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent)}
+.target{font-size:68px;font-weight:300;line-height:1;margin:4px 0}
+.target small{font-size:26px;vertical-align:top}
+.current{color:var(--muted);font-size:14px}
+.setrow{display:flex;justify-content:center;gap:28px;margin-top:6px}
+.step{width:64px;height:64px;border-radius:50%;font-size:30px;background:var(--bg);border:1px solid var(--line)}
+.step:active{transform:scale(.95)}
+.dual{display:none;gap:10px;justify-content:center;margin-top:12px}
+.dual button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:14px}
+.dual button.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.dual b{display:block;font-size:22px;font-weight:500}
+label.h{display:block;font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--bg);padding:5px;border-radius:14px}
+.seg button{padding:11px 4px;border-radius:10px;font-size:14px;color:var(--muted)}
+.seg button.sel{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button[disabled]{opacity:.35}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--bg);border-radius:14px;padding:12px}
+.stat span{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-size:18px;font-weight:600}
+.banner{background:var(--auto);color:#fff;border-radius:14px;padding:10px 14px;font-size:14px;margin-top:12px;display:none}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222a;color:#fff;backdrop-filter:blur(8px);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+/* settings */
+dialog{border:0;border-radius:20px;padding:0;background:var(--card);color:var(--ink);width:min(94vw,480px)}
+dialog::backdrop{background:#0008}
+.dlg{padding:20px}
+.dlg h2{margin:0 0 4px;font-size:20px}
+.field{margin-top:14px}
+.field input,.field select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.btn{padding:12px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:600}
+.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.help{font-size:13px;color:var(--muted)}
+.help a{color:var(--cool)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1 id="appName">Hearth</h1>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Starting…</span></div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="iconbtn" id="refreshBtn" aria-label="Refresh">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <button class="iconbtn" id="settingsBtn" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="banner" id="demoBanner">Demo mode. Nothing is sent to a real thermostat. Open settings to connect your hub.</div>
+
+<section class="card">
+  <div class="dial">
+    <svg viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="86" fill="none" stroke="var(--line)" stroke-width="12" stroke-dasharray="405 541" stroke-linecap="round"/>
+      <circle id="arc" cx="100" cy="100" r="86" fill="none" stroke="var(--accent)" stroke-width="12" stroke-dasharray="0 541" stroke-linecap="round" style="transition:stroke-dasharray .3s"/>
+    </svg>
+    <div class="center">
+      <div class="state" id="opState">—</div>
+      <div class="target" id="target">--<small>°</small></div>
+      <div class="current" id="current">Inside --°</div>
+    </div>
+  </div>
+  <div class="dual" id="dual">
+    <button id="pickHeat" class="sel">Heat to<b id="heatVal">--°</b></button>
+    <button id="pickCool">Cool to<b id="coolVal">--°</b></button>
+  </div>
+  <div class="setrow">
+    <button class="step" id="down" aria-label="Lower">−</button>
+    <button class="step" id="up" aria-label="Raise">+</button>
+  </div>
+</section>
+
+<section class="card">
+  <label class="h">Mode</label>
+  <div class="seg" id="modeSeg"></div>
+</section>
+
+<section class="card">
+  <label class="h">Fan</label>
+  <div class="seg" id="fanSeg"></div>
+</section>
+
+<section class="card">
+  <div class="grid2">
+    <div class="stat"><span>Heat setpoint</span><b id="sHeat">--</b></div>
+    <div class="stat"><span>Cool setpoint</span><b id="sCool">--</b></div>
+    <div class="stat"><span>Fan running</span><b id="sFan">--</b></div>
+    <div class="stat"><span>Battery</span><b id="sBatt">--</b></div>
+  </div>
+  <div class="help" id="updated" style="margin-top:10px"></div>
+</section>
+
+<dialog id="settings">
+  <form method="dialog" class="dlg" id="settingsForm">
+    <h2>Connect your hub</h2>
+    <div class="help">Works with SmartThings, which includes the Aeotec Smart Home Hub. Your token stays on this phone only.</div>
+    <div class="field">
+      <label class="h" for="token">SmartThings token</label>
+      <input id="token" type="password" autocomplete="off" placeholder="Paste a personal access token">
+      <div class="help" style="margin-top:6px">Make one at <a href="https://account.smartthings.com/tokens" target="_blank" rel="noopener">account.smartthings.com/tokens</a> with Devices: List, See, and Control turned on.</div>
+    </div>
+    <div class="row"><button type="button" class="btn ghost" id="findBtn">Find thermostats</button></div>
+    <div class="field">
+      <label class="h" for="deviceSel">Thermostat</label>
+      <select id="deviceSel"><option value="">Find thermostats first</option></select>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="saveBtn">Save and connect</button>
+      <button type="button" class="btn ghost" id="demoBtn">Use demo mode</button>
+      <button value="cancel" class="btn ghost">Close</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// ---------- Config ----------
+const APP_NAME = "Hearth";            // change here (and in manifest.json) to rename the app
+const API = "https://api.smartthings.com/v1";
+const POLL_MS = 30000;                // refresh from the hub every 30 s
+const SEND_DELAY_MS = 900;            // wait for button taps to settle before sending
+// Honeywell T6 Pro limits (deg F): heat 40-90, cool 50-99, 3 deg gap in Auto
+const LIMITS = { heatMin: 40, heatMax: 90, coolMin: 50, coolMax: 99, deadband: 3 };
+const MODE_LABEL = { off:"Off", heat:"Heat", cool:"Cool", auto:"Auto", "emergency heat":"Em Heat", emergencyHeat:"Em Heat" };
+const FAN_LABEL = { auto:"Auto", on:"On", circulate:"Circulate", followschedule:"Schedule" };
+
+// ---------- Storage (wrapped: private windows can block it) ----------
+const store = {
+  get(k){ try { return localStorage.getItem("hearth."+k); } catch { return null; } },
+  set(k,v){ try { v==null ? localStorage.removeItem("hearth."+k) : localStorage.setItem("hearth."+k,v); } catch {} }
+};
+
+// ---------- State ----------
+let cfg = { token: store.get("token"), deviceId: store.get("deviceId"), demo: store.get("demo") !== "0" };
+if (cfg.token && cfg.deviceId && store.get("demo") == null) cfg.demo = false;
+let st = null;            // normalized thermostat state
+let editing = "heat";     // which setpoint +/- changes in Auto
+let pending = {};         // queued setpoint changes
+let sendTimer = null, pollTimer = null, busy = false;
+
+const $ = id => document.getElementById(id);
+document.title = APP_NAME; $("appName").textContent = APP_NAME;
+
+// ---------- Demo backend ----------
+const demo = {
+  s: { mode:"cool", modes:["off","heat","cool","auto","emergency heat"], fan:"auto", fans:["auto","on","circulate"],
+       heat:68, cool:74, temp:76, op:"cooling", battery:null, unit:"F", name:"Hallway Thermostat (demo)" },
+  async status(){ const s=this.s;
+    const tgt = s.mode==="heat"?s.heat : s.mode==="cool"?s.cool : null;
+    s.temp += tgt==null?0 : Math.sign(tgt-s.temp)*0.5;
+    s.op = s.mode==="off"?"idle" : (s.mode==="heat"||s.mode==="emergency heat") && s.temp<s.heat?"heating"
+         : s.mode==="cool" && s.temp>s.cool?"cooling" : s.mode==="auto" ? (s.temp<s.heat?"heating":s.temp>s.cool?"cooling":"idle") : "idle";
+    return JSON.parse(JSON.stringify(s)); },
+  async send(cmds){ for (const c of cmds){
+      if (c.command==="setHeatingSetpoint") this.s.heat=c.arguments[0];
+      if (c.command==="setCoolingSetpoint") this.s.cool=c.arguments[0];
+      if (c.command==="setThermostatMode") this.s.mode=c.arguments[0];
+      if (c.command==="setThermostatFanMode") this.s.fan=c.arguments[0]; } }
+};
+
+// ---------- SmartThings backend ----------
+async function st_fetch(path, opts={}){
+  const r = await fetch(API+path, { ...opts, headers:{ "Authorization":"Bearer "+cfg.token, "Content-Type":"application/json", ...(opts.headers||{}) } });
+  if (r.status===401) throw new Error("Token rejected (it may have expired). Make a new one in settings.");
+  if (r.status===403) throw new Error("Token is missing a permission. Turn on Devices: List, See, Control.");
+  if (!r.ok) throw new Error("Hub error "+r.status);
+  return r.status===204 ? null : r.json();
+}
+const val = (cap, attr) => cap && cap[attr] ? cap[attr].value : null;
+const smartthings = {
+  async list(){
+    const j = await st_fetch("/devices?capability=thermostatMode");
+    return (j.items||[]).map(d=>({ id:d.deviceId, name:d.label||d.name }));
+  },
+  async status(){
+    const j = await st_fetch(`/devices/${cfg.deviceId}/status`);
+    const m = j.components.main;
+    const tm = m.temperatureMeasurement?.temperature;
+    return {
+      mode: val(m.thermostatMode,"thermostatMode"),
+      modes: val(m.thermostatMode,"supportedThermostatModes") || ["off","heat","cool","auto"],
+      fan: val(m.thermostatFanMode,"thermostatFanMode"),
+      fans: val(m.thermostatFanMode,"supportedThermostatFanModes") || ["auto","on","circulate"],
+      heat: val(m.thermostatHeatingSetpoint,"heatingSetpoint"),
+      cool: val(m.thermostatCoolingSetpoint,"coolingSetpoint"),
+      temp: tm ? tm.value : null, unit: (tm && tm.unit) || "F",
+      op: val(m.thermostatOperatingState,"thermostatOperatingState"),
+      battery: val(m.battery,"battery"),
+      name: cfg.deviceName || "Thermostat"
+    };
+  },
+  async send(cmds){
+    await st_fetch(`/devices/${cfg.deviceId}/commands`, { method:"POST",
+      body: JSON.stringify({ commands: cmds.map(c=>({ component:"main", ...c })) }) });
+  }
+};
+cfg.deviceName = store.get("deviceName");
+const backend = () => cfg.demo ? demo : smartthings;
+
+// ---------- UI helpers ----------
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
+function setStatus(kind, text){ $("dot").className="dot "+kind; $("statusText").textContent=text; }
+const isHeatMode = m => m==="heat" || m==="emergency heat" || m==="emergencyHeat";
+const fmt = v => v==null ? "--" : (Math.round(v*10)/10)+"°";
+const cel = () => st && st.unit==="C";
+function limits(){ // convert limits if the hub reports Celsius
+  if (!cel()) return LIMITS;
+  const c = f => Math.round((f-32)*5/9*2)/2;
+  return { heatMin:c(40), heatMax:c(90), coolMin:c(50), coolMax:c(99), deadband:1.5 };
+}
+
+function render(){
+  if (!st) return;
+  const L = limits();
+  const heat = pending.heat ?? st.heat, cool = pending.cool ?? st.cool;
+  const mode = st.mode;
+  const accent = mode==="off" ? "var(--off)" : isHeatMode(mode) ? "var(--heat)" : mode==="cool" ? "var(--cool)" : "var(--auto)";
+  document.documentElement.style.setProperty("--accent", accent);
+
+  const opText = { heating:"Heating", cooling:"Cooling", idle:"Idle", "fan only":"Fan only", "pending heat":"Heat pending", "pending cool":"Cool pending", "vent economizer":"Venting" };
+  $("opState").textContent = mode==="off" ? "Off" : (opText[st.op] || st.op || "Idle");
+
+  let shown = null, lo = 40, hi = 99;
+  if (isHeatMode(mode)) { shown = heat; lo=L.heatMin; hi=L.heatMax; }
+  else if (mode==="cool") { shown = cool; lo=L.coolMin; hi=L.coolMax; }
+  else if (mode==="auto") { shown = editing==="heat"?heat:cool; lo = editing==="heat"?L.heatMin:L.coolMin; hi = editing==="heat"?L.heatMax:L.coolMax; }
+  $("target").innerHTML = shown==null ? "Off" : `${Math.round(shown*10)/10}<small>°</small>`;
+  $("target").style.fontSize = shown==null ? "52px" : "";
+  $("current").textContent = "Inside " + fmt(st.temp);
+  const frac = shown==null ? 0 : Math.max(0, Math.min(1, (shown-lo)/(hi-lo)));
+  $("arc").setAttribute("stroke-dasharray", `${Math.max(1,frac*405)} 541`);
+
+  $("dual").style.display = mode==="auto" ? "flex" : "none";
+  $("heatVal").textContent = fmt(heat); $("coolVal").textContent = fmt(cool);
+  $("pickHeat").classList.toggle("sel", editing==="heat"); $("pickCool").classList.toggle("sel", editing==="cool");
+  $("up").disabled = $("down").disabled = (mode==="off");
+  $("up").style.opacity = $("down").style.opacity = mode==="off" ? .35 : 1;
+
+  renderSeg("modeSeg", st.modes, mode, MODE_LABEL, setMode);
+  renderSeg("fanSeg", st.fans, st.fan, FAN_LABEL, setFan);
+
+  $("sHeat").textContent = fmt(heat); $("sCool").textContent = fmt(cool);
+  $("sFan").textContent = st.fan==="on" || st.op==="fan only" || st.op==="heating" || st.op==="cooling" ? "Yes" : "No";
+  $("sBatt").textContent = st.battery==null ? "Wired" : st.battery+"%";
+  $("updated").textContent = (st.name||"") + " · updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  $("demoBanner").style.display = cfg.demo ? "block" : "none";
+}
+
+function renderSeg(id, options, current, labels, onPick){
+  const el = $(id);
+  const key = options.join("|")+"#"+current;
+  if (el.dataset.key===key) return;
+  el.dataset.key = key; el.innerHTML = "";
+  for (const o of options){
+    const b = document.createElement("button");
+    b.textContent = labels[o] || (o[0].toUpperCase()+o.slice(1));
+    if (o===current) b.classList.add("sel");
+    b.onclick = () => onPick(o);
+    el.appendChild(b);
+  }
+}
+
+// ---------- Actions ----------
+function nudge(dir){
+  if (!st || st.mode==="off") return;
+  const L = limits(), step = cel() ? 0.5 : 1;
+  const which = isHeatMode(st.mode) ? "heat" : st.mode==="cool" ? "cool" : editing;
+  let heat = pending.heat ?? st.heat, cool = pending.cool ?? st.cool;
+  if (which==="heat"){
+    heat = Math.max(L.heatMin, Math.min(L.heatMax, heat + dir*step));
+    pending.heat = heat;
+    if (st.mode==="auto" && cool - heat < L.deadband) pending.cool = Math.min(L.coolMax, heat + L.deadband);
+  } else {
+    cool = Math.max(L.coolMin, Math.min(L.coolMax, cool + dir*step));
+    pending.cool = cool;
+    if (st.mode==="auto" && cool - heat < L.deadband) pending.heat = Math.max(L.heatMin, cool - L.deadband);
+  }
+  if (navigator.vibrate) navigator.vibrate(8);
+  render();
+  clearTimeout(sendTimer); sendTimer = setTimeout(flushSetpoints, SEND_DELAY_MS);
+}
+
+async function flushSetpoints(){
+  const cmds = [];
+  if (pending.heat != null) cmds.push({ capability:"thermostatHeatingSetpoint", command:"setHeatingSetpoint", arguments:[pending.heat] });
+  if (pending.cool != null) cmds.push({ capability:"thermostatCoolingSetpoint", command:"setCoolingSetpoint", arguments:[pending.cool] });
+  if (!cmds.length) return;
+  const sent = { ...pending };
+  await sendCmds(cmds, "Set to " + Object.values(sent).map(v=>v+"°").join(" / "));
+  for (const k in sent) if (pending[k]===sent[k]) delete pending[k];
+}
+
+const setMode = m => sendCmds([{ capability:"thermostatMode", command:"setThermostatMode", arguments:[m] }], "Mode: "+(MODE_LABEL[m]||m), () => st.mode = m);
+const setFan  = f => sendCmds([{ capability:"thermostatFanMode", command:"setThermostatFanMode", arguments:[f] }], "Fan: "+(FAN_LABEL[f]||f), () => st.fan = f);
+
+async function sendCmds(cmds, okMsg, optimistic){
+  if (optimistic) { optimistic(); render(); }
+  setStatus("busy","Sending…");
+  try {
+    await backend().send(cmds);
+    toast(okMsg);
+    setTimeout(refresh, 2500);  // Z-Wave reports back after a moment
+  } catch(e){
+    setStatus("err", e.message); toast("Didn't go through: "+e.message);
+    refresh();
+  }
+}
+
+async function refresh(){
+  if (busy) return; busy = true;
+  if (!cfg.demo && (!cfg.token || !cfg.deviceId)) { setStatus("", "Not connected"); busy=false; openSettings(); return; }
+  try {
+    st = await backend().status();
+    setStatus("ok", cfg.demo ? "Demo" : "Connected");
+    render();
+  } catch(e){
+    setStatus("err", e.message.includes("fetch") ? "Can't reach SmartThings. Check internet." : e.message);
+  } finally { busy = false; }
+}
+
+// ---------- Settings ----------
+function openSettings(){ $("token").value = cfg.token || ""; if (!$("settings").open) $("settings").showModal(); }
+$("settingsBtn").onclick = openSettings;
+$("refreshBtn").onclick = () => { refresh(); toast("Refreshing"); };
+$("findBtn").onclick = async () => {
+  cfg.token = $("token").value.trim();
+  if (!cfg.token) return toast("Paste your token first");
+  try {
+    const list = await smartthings.list();
+    const sel = $("deviceSel"); sel.innerHTML = "";
+    if (!list.length) { sel.innerHTML = "<option value=''>No thermostats found on this account</option>"; return; }
+    for (const d of list){ const o=document.createElement("option"); o.value=d.id; o.textContent=d.name; if (d.id===cfg.deviceId) o.selected=true; sel.appendChild(o); }
+    toast(`Found ${list.length} thermostat${list.length>1?"s":""}`);
+  } catch(e){ toast(e.message); }
+};
+$("saveBtn").onclick = () => {
+  const sel = $("deviceSel");
+  if (!$("token").value.trim() || !sel.value) return toast("Add a token and pick a thermostat");
+  cfg.token = $("token").value.trim(); cfg.deviceId = sel.value; cfg.deviceName = sel.options[sel.selectedIndex].text; cfg.demo = false;
+  store.set("token", cfg.token); store.set("deviceId", cfg.deviceId); store.set("deviceName", cfg.deviceName); store.set("demo","0");
+  $("settings").close(); st = null; refresh();
+};
+$("demoBtn").onclick = () => { cfg.demo = true; store.set("demo","1"); $("settings").close(); refresh(); };
+
+// ---------- Wire up ----------
+$("up").onclick = () => nudge(+1);
+$("down").onclick = () => nudge(-1);
+$("pickHeat").onclick = () => { editing="heat"; render(); };
+$("pickCool").onclick = () => { editing="cool"; render(); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+pollTimer = setInterval(() => { if (!document.hidden && !Object.keys(pending).length) refresh(); }, POLL_MS);
+if ("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+refresh();
+</script>
+</body>
+</html>
